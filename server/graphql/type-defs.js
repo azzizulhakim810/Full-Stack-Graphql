@@ -7,8 +7,6 @@ const typeDefs = gql`
     username: String!
     age: Int!
     nationality: Nationality!
-    friends: [User]
-    favoriteMovies: [Movie]
   }
 
   type Movie {
@@ -21,8 +19,9 @@ const typeDefs = gql`
   type Query {
     users: UserResult
     user(id: ID!): User!
-    movies: [Movie!]!
-    movie(name: String!): Movie!
+    # movies: [Movie!]!
+    userByName(name: String!): User!
+    messages: [Message!]!
     message(ID: ID!): Message
   }
 
@@ -77,7 +76,7 @@ const typeDefs = gql`
     INDIA
     GERMANY
     CHILE
-    UKRAINE
+    BANGLADESH
   }
 
   type Message {

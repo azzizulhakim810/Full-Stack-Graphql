@@ -13,7 +13,6 @@ const QUERY_ALL_USERS = gql`
           nationality
         }
       }
-
       ... on UserErrorResult {
         message
       }
@@ -21,19 +20,24 @@ const QUERY_ALL_USERS = gql`
   }
 `;
 
-const QUERY_ALL_MOVIES = gql`
-  query GetAllMovies {
-    movies {
-      name
+const QUERY_ALL_MESSAGES = gql`
+  query GetAllMessages {
+    messages {
+      id
+      title
+      content
     }
   }
 `;
 
-const GET_MOVIE_BY_NAME = gql`
-  query Movie($name: String!) {
-    movie(name: $name) {
+const GET_USER_BY_NAME = gql`
+  query UserByName($name: String!) {
+    userByName(name: $name) {
+      id
       name
-      yearOfPublication
+      age
+      username
+      nationality
     }
   }
 `;
@@ -49,16 +53,12 @@ const CREATE_USER_MUTATION = gql`
 
 const DELETE_USER_MUTATION = gql`
   mutation DeleteUser($id: ID!) {
-    deleteUser(id: $id) {
-      id
-    }
+    deleteUser(id: $id)
   }
 `;
 
 function DisplayData() {
-  const [movieSearched, setMovieSearched] = useState("");
-
-  // const [updatedUsername, setUpdatedUsername] = useState("");
+  const [nameSearched, setNameSearched] = useState("");
 
   // Create User States
   const [name, setName] = useState("");
@@ -66,27 +66,37 @@ function DisplayData() {
   const [age, setAge] = useState(0);
   const [nationality, setNationality] = useState("");
 
-  const { data, loading, refetch } = useQuery(QUERY_ALL_USERS);
+  const { data, loading, refetch, error } = useQuery(QUERY_ALL_USERS);
 
-  const { data: movieData } = useQuery(QUERY_ALL_MOVIES);
+  // console.log(data.users.users);
 
-  const [fetchMovie, { data: movieSearchedData, error: movieError }] =
-    useLazyQuery(GET_MOVIE_BY_NAME);
+  const { data: messageData, error: messageError } =
+    useQuery(QUERY_ALL_MESSAGES);
+
+  const [fetchUser, { data: userSearchedData, error: userError }] =
+    useLazyQuery(GET_USER_BY_NAME);
 
   const [createUser] = useMutation(CREATE_USER_MUTATION);
 
   const [deleteUser] = useMutation(DELETE_USER_MUTATION);
 
   if (loading) {
-    return <h3> DATA IS LOADING...</h3>;
+    return <h3>DATA IS LOADING...</h3>;
   }
 
-  // console.log(updatedUsername);
+  if (error) {
+    console.error("Error fetching users:", error);
+    return <h5>Error fetching users</h5>;
+  }
+
+  if (messageError) {
+    console.error("Error fetching messages:", messageError);
+    return <h5>Error fetching messages</h5>;
+  }
 
   return (
     <div>
       {/* Create User */}
-
       <div className="input-fields">
         <input
           type="text"
@@ -113,14 +123,19 @@ function DisplayData() {
           type="text"
           placeholder="Nationality..."
           onChange={(event) => {
-            setNationality(event.target.value.toUpperCase());
+            setNationality(event.target.value.toLowerCase());
           }}
         />
         <button
           onClick={() => {
             createUser({
               variables: {
-                input: { name, username, age: Number(age), nationality },
+                input: {
+                  name: name.toLowerCase(),
+                  username: username.toLowerCase(),
+                  age: Number(age),
+                  nationality,
+                },
               },
             });
 
@@ -131,117 +146,89 @@ function DisplayData() {
         </button>
       </div>
 
-      {/* Mutation User  */}
+      {/* Users */}
       <div className="data">
-        {/* Username  */}
         <div className="child">
           <h2>Users</h2>
-
           {data &&
-            data.users.users.map((user) => {
-              return (
-                <div key={user.id}>
-                  <hr />
-
-                  <p>Name: {user.name}</p>
-
-                  <p>Age: {user.age}</p>
-                  <p>Nationality: {user.nationality}</p>
-                  <p>Username: {user.username}</p>
-
-                  <div className="user-options">
-                    {/* <input
-                      // className="input-field"
-                      // type="text"
-                      // placeholder="new username..."
-                      // onChange={(event) => {
-                        // setUpdatedUsername(event.target.value);
-                      // }}
-                   //  /> */}
-                    {/*  <button
-                        className="btn-custom"
-                        onClick={() => {
-                          fetchMovie({
-                            variables: {
-                              name: movieSearched,
-                            },
-                          });
-                        }}
-                      >
-                        Update
-                      </button> */}
-
-                    <button
-                      className="btn-custom"
-                      onClick={() => {
-                        deleteUser({
-                          variables: {
-                            id: user.id,
-                          },
+            data.users.users.map((user) => (
+              <div key={user.id}>
+                <hr />
+                <p>Name: {user.name.toUpperCase()}</p>
+                <p>Age: {user.age}</p>
+                <p>Nationality: {user.nationality}</p>
+                <p>Username: {user.username}</p>
+                <div className="user-options">
+                  <button
+                    className="btn-custom"
+                    onClick={() => {
+                      deleteUser({
+                        variables: {
+                          id: user.id,
+                        },
+                      })
+                        .then(() => {
+                          refetch();
+                        })
+                        .catch((error) => {
+                          console.error("Error deleting user:", error);
                         });
-
-                        refetch();
-                      }}
-                    >
-                      Delete User
-                    </button>
-                  </div>
+                    }}
+                  >
+                    Delete User
+                  </button>
                 </div>
-              );
-            })}
+              </div>
+            ))}
         </div>
 
-        {/* Movie Names  */}
+        {/* Messages */}
         <div className="child">
-          <h2>Movies</h2>
-          {movieData &&
-            movieData.movies.map((movie) => {
-              return (
-                <div key={movie.id}>
-                  <hr />
-                  <p>Movie Name: {movie.name}</p>
-                </div>
-              );
-            })}
+          <h2>Messages</h2>
+          {messageData &&
+            messageData.messages.map((message) => (
+              <div key={message.id}>
+                <hr />
+                <h4>Title: {message.title}</h4>
+                <p>Desc: {message.content}</p>
+              </div>
+            ))}
         </div>
 
-        {/* Search Movies */}
+        {/* Search Users */}
         <div className="child">
-          <h2>Search Movies</h2>
+          <h2>Search Users</h2>
           <hr />
           <input
             className="input-field"
             type="text"
-            placeholder="Interstellar..."
+            placeholder="User name..."
             onChange={(event) => {
-              setMovieSearched(event.target.value);
+              setNameSearched(event.target.value.toLowerCase());
             }}
           />
-          {
-            <button
-              className="btn-custom"
-              onClick={() => {
-                fetchMovie({
-                  variables: {
-                    name: movieSearched,
-                  },
-                });
-              }}
-            >
-              Fetch Data
-            </button>
-          }
+          <button
+            className="btn-custom"
+            onClick={() => {
+              fetchUser({
+                variables: {
+                  name: nameSearched,
+                },
+              });
+            }}
+          >
+            Fetch Data
+          </button>
           <div>
-            {movieSearchedData && (
+            {userSearchedData && (
               <div>
-                <p>MovieName: {movieSearchedData.movie.name}</p>
-                <p>
-                  Year Of Publication:{" "}
-                  {movieSearchedData.movie.yearOfPublication}
-                </p>{" "}
+                <p>Name: {userSearchedData.userByName.name.toUpperCase()}</p>
+                <p>Age: {userSearchedData.userByName.age}</p>
+                <p>Username: {userSearchedData.userByName.username}</p>
+                <p>Nationality: {userSearchedData.userByName.nationality}</p>
               </div>
             )}
-            {movieError && <h5> There was an error fetching the data</h5>}
+            {userError && <h5> There was an error fetching the data</h5>}
           </div>
         </div>
       </div>

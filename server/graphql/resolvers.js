@@ -29,7 +29,28 @@ const resolvers = {
         return null;
       }
     },
-    message: async (parent, { ID }) => {
+
+    userByName: async (parent, args) => {
+      try {
+        const user = await User.findOne({ name: args.name });
+        console.log(user);
+        return user;
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    },
+
+    messages: async () => {
+      try {
+        const messages = await Message.find();
+        // console.log(messages);
+        return messages;
+      } catch (error) {
+        return { message: "Error fetching message" };
+      }
+    },
+    /*   message: async (parent, { ID }) => {
       try {
         const message = await Message.findById(ID);
         return message;
@@ -37,7 +58,7 @@ const resolvers = {
         console.error(error);
         return null;
       }
-    },
+    }, */
   },
   Mutation: {
     createMessage: async (parent, { messageInput: { title, content } }) => {
