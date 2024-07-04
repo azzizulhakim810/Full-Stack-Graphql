@@ -23,7 +23,7 @@ const typeDefs = gql`
     user(id: ID!): User!
     movies: [Movie!]!
     movie(name: String!): Movie!
-    message(id: ID!): Message
+    message(ID: ID!): Message
   }
 
   input CreateUserInput {
@@ -38,9 +38,9 @@ const typeDefs = gql`
     newUsername: String!
   }
 
-  input CreateMessageInput {
-    title: String
-    content: String
+  input MessageInput {
+    title: String!
+    content: String!
   }
 
   input LoginInput {
@@ -61,7 +61,7 @@ const typeDefs = gql`
 
   type Mutation {
     createUser(input: CreateUserInput!): User!
-    createMessage(messageInput: CreateMessageInput!): Message!
+    createMessage(messageInput: MessageInput): Message!
     updateUsername(input: UpdateUsernameInput!): User
     deleteUser(id: ID!): String!
     # login(input: LoginInput): UserWithToken
@@ -69,7 +69,6 @@ const typeDefs = gql`
 
   type Subscription {
     messageCreated: Message!
-    newUser: User!
   }
 
   enum Nationality {
@@ -82,8 +81,9 @@ const typeDefs = gql`
   }
 
   type Message {
-    title: String
-    content: String
+    id: ID!
+    title: String!
+    content: String!
   }
 
   type UserSuccessfullResult {

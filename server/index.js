@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const { createServer } = require("http");
-const { subscribe, execute } = require("graphql");
+const { execute, subscribe } = require("graphql");
 const { SubscriptionServer } = require("subscriptions-transport-ws");
 const { makeExecutableSchema } = require("@graphql-tools/schema");
 const { PubSub } = require("graphql-subscriptions");
@@ -12,13 +12,13 @@ const mongoose = require("mongoose");
 const { resolvers } = require("./graphql/resolvers");
 const { typeDefs } = require("./graphql/type-defs");
 const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
+
 const PORT = process.env.PORT || 4000;
 
 // DB Connection
 mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
   })
   .then(() => {
     console.log("DB connected!!");
@@ -27,26 +27,14 @@ mongoose
 
 (async () => {
   const app = express();
-  const schema = makeExecutableSchema({ typeDefs, resolvers });
   const httpServer = createServer(app);
   const pubSub = new PubSub();
-
-  // console.log(typeDefs); // Add this line to log the typeDefs
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
 
   const server = new ApolloServer({
     schema,
     context: ({ req }) => ({ req, pubSub }),
-    plugins: [
-      {
-        async serverWillStart() {
-          return {
-            async drainServer() {
-              subscriptionServer.close();
-            },
-          };
-        },
-      },
-    ],
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
   const subscriptionServer = SubscriptionServer.create(
@@ -54,6 +42,8 @@ mongoose
       schema,
       execute,
       subscribe,
+      onConnect: () => console.log("Connected to websocket"),
+      onDisconnect: () => console.log("Disconnected from websocket"),
     },
     {
       server: httpServer,
