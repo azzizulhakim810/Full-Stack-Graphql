@@ -58,7 +58,7 @@ const DELETE_USER_MUTATION = gql`
 function DisplayData() {
   const [movieSearched, setMovieSearched] = useState("");
 
-  const [updatedUsername, setUpdatedUsername] = useState("");
+  // const [updatedUsername, setUpdatedUsername] = useState("");
 
   // Create User States
   const [name, setName] = useState("");
@@ -81,7 +81,7 @@ function DisplayData() {
     return <h3> DATA IS LOADING...</h3>;
   }
 
-  console.log(updatedUsername);
+  // console.log(updatedUsername);
 
   return (
     <div>
@@ -150,28 +150,26 @@ function DisplayData() {
                   <p>Username: {user.username}</p>
 
                   <div className="user-options">
-                    <input
-                      className="input-field"
-                      type="text"
-                      placeholder="new username..."
-                      onChange={(event) => {
-                        setUpdatedUsername(event.target.value);
-                      }}
-                    />
-                    {
-                      <button
+                    {/* <input
+                      // className="input-field"
+                      // type="text"
+                      // placeholder="new username..."
+                      // onChange={(event) => {
+                        // setUpdatedUsername(event.target.value);
+                      // }}
+                   //  /> */}
+                    {/*  <button
                         className="btn-custom"
-                        /*  onClick={() => {
-                fetchMovie({
-                  variables: {
-                    name: movieSearched,
-                  },
-                });
-              }} */
+                        onClick={() => {
+                          fetchMovie({
+                            variables: {
+                              name: movieSearched,
+                            },
+                          });
+                        }}
                       >
                         Update
-                      </button>
-                    }
+                      </button> */}
 
                     <button
                       className="btn-custom"

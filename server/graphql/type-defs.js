@@ -43,11 +43,28 @@ const typeDefs = gql`
     content: String
   }
 
+  input LoginInput {
+    email: String!
+    password: String!
+  }
+
+  # type UserWithToken {
+  #  _id: String
+  #   email: String
+  #   fname: String
+  #   lname: String
+  #   following: [String]
+  #  createdAt: DateTime
+  #  updatedAt: DateTime
+  #  userJwtToken: JwtToken
+  # }
+
   type Mutation {
-    createUser(input: CreateUserInput!): User
+    createUser(input: CreateUserInput!): User!
     createMessage(messageInput: CreateMessageInput!): Message!
     updateUsername(input: UpdateUsernameInput!): User
-    deleteUser(id: ID!): User
+    deleteUser(id: ID!): String!
+    # login(input: LoginInput): UserWithToken
   }
 
   type Subscription {
