@@ -9,17 +9,9 @@ const typeDefs = gql`
     nationality: Nationality!
   }
 
-  type Movie {
-    id: ID!
-    name: String!
-    yearOfPublication: Int!
-    isInTheaters: Boolean!
-  }
-
   type Query {
     users: UserResult
     user(id: ID!): User!
-    # movies: [Movie!]!
     userByName(name: String!): User!
     messages: [Message!]!
     message(ID: ID!): Message

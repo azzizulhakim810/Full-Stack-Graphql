@@ -71,11 +71,18 @@ const resolvers = {
 
       return res;
     },
-    createUser: async (parent, args) => {
+
+    createUser: async (_, args) => {
       const userInput = args.input;
+      console.log(args);
       const newUser = new User(userInput);
-      await newUser.save();
-      return newUser;
+      try {
+        await newUser.save();
+        return newUser; // Ensure you return the created user object
+      } catch (error) {
+        console.error("Error creating user:", error);
+        throw new Error("Failed to create user");
+      }
     },
     updateUsername: async (parent, args) => {
       const { id, newUsername } = args.input;

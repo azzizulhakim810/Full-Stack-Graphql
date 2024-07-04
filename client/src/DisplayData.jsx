@@ -45,8 +45,10 @@ const GET_USER_BY_NAME = gql`
 const CREATE_USER_MUTATION = gql`
   mutation CreateUser($input: CreateUserInput!) {
     createUser(input: $input) {
-      name
       id
+      age
+      name
+      username
     }
   }
 `;
@@ -123,7 +125,7 @@ function DisplayData() {
           type="text"
           placeholder="Nationality..."
           onChange={(event) => {
-            setNationality(event.target.value.toLowerCase());
+            setNationality(event.target.value.toUpperCase());
           }}
         />
         <button
@@ -137,9 +139,13 @@ function DisplayData() {
                   nationality,
                 },
               },
-            });
-
-            refetch();
+            })
+              .then(() => {
+                refetch(); // Optionally, refetch data after successful mutation
+              })
+              .catch((error) => {
+                console.error("Error creating user:", error);
+              });
           }}
         >
           Create User
