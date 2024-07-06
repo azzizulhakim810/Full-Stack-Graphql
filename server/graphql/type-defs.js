@@ -18,7 +18,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    users: UserResult
+    users(offset: Int, limit: Int): UserResult
     user(id: ID!): User!
     userByName(name: String!): User!
     messages: [Message!]!

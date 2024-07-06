@@ -25,11 +25,12 @@ const resolvers = {
       }
     },
 
-    users: async () => {
+    users: async (_, { offset, limit }) => {
       try {
-        const users = await UserModel.find();
+        const users = await UserModel.find().skip(offset).limit(limit);
+        const totalCount = await UserModel.length;
 
-        return { users };
+        return { users, totalCount };
       } catch (error) {
         return { message: "Error fetching users" };
       }
