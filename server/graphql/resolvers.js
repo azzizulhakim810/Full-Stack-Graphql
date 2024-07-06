@@ -1,7 +1,11 @@
 const { PubSub } = require("graphql-subscriptions");
-const Message = require("../models/Message");
-const User = require("../models/User");
+const { ApolloError } = require("apollo-server-express");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
+const Message = require("../models/Message");
+const UserModel = require("../models/User");
+const CustomerModel = require("../models/Customer");
 const pubSub = new PubSub();
 
 const resolvers = {
@@ -11,9 +15,19 @@ const resolvers = {
     },
   },
   Query: {
+    customer: async (_, { ID }) => {
+      try {
+        const customer = await CustomerModel.findById(ID);
+        return customer;
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    },
+
     users: async () => {
       try {
-        const users = await User.find();
+        const users = await UserModel.find();
 
         return { users };
       } catch (error) {
@@ -22,7 +36,7 @@ const resolvers = {
     },
     user: async (parent, args) => {
       try {
-        const user = await User.findById(args.id);
+        const user = await UserModel.findById(args.id);
         return user;
       } catch (error) {
         console.error(error);
@@ -32,7 +46,7 @@ const resolvers = {
 
     userByName: async (parent, args) => {
       try {
-        const user = await User.findOne({ name: args.name });
+        const user = await UserModel.findOne({ name: args.name });
         console.log(user);
         return user;
       } catch (error) {
@@ -50,17 +64,83 @@ const resolvers = {
         return { message: "Error fetching message" };
       }
     },
-    /*   message: async (parent, { ID }) => {
+    message: async (parent, { id }) => {
       try {
-        const message = await Message.findById(ID);
+        const message = await Message.findById(id);
         return message;
       } catch (error) {
         console.error(error);
         return null;
       }
-    }, */
+    },
   },
   Mutation: {
+    async registerUser(_, { registerInput: { cUsername, email, password } }) {
+      // See if an old customer exists with email attempting to register
+      const oldCustomer = await CustomerModel.findOne({ email });
+
+      // Throw error if that customer exists
+      if (oldCustomer) {
+        throw new ApolloError(
+          `A user is already registered this email, ${email}, 'USER_ALREADY_EXISTS'`
+        );
+      }
+
+      // Encrypt password
+      const encryptedPassword = await bcrypt.hash(password, 10);
+
+      // Build out Mongoose model (Customer)
+      const newCustomer = new CustomerModel({
+        cUsername: cUsername,
+        email: email,
+        password: encryptedPassword,
+      });
+
+      // Create out JWT (attach to our Customer Model)
+
+      const token = jwt.sign(
+        { customer_id: newCustomer._id, email },
+        "UNSAFE_STRING",
+        { expiresIn: "2h" }
+      );
+
+      newCustomer.token = token;
+      // Save our customer to MongoDB
+
+      const res = await newCustomer.save();
+
+      return {
+        id: res.id,
+        ...res._doc,
+      };
+    },
+
+    async loginUser(_, { loginInput: { email, password } }) {
+      // See if a user exists with the email
+      const customer = await CustomerModel.findOne({ email });
+
+      // Check if the entered password equals the encrypted password
+      if (customer && (await bcrypt.compare(password, customer.password))) {
+        // Create a NEW Token
+        const token = jwt.sign(
+          { customer_id: customer._id, email },
+          "UNSAFE_STRING",
+          { expiresIn: "2h" }
+        );
+
+        // Attach token a customer model that we found above
+        customer.token = token;
+
+        return {
+          id: customer.id,
+          ...customer._doc,
+        };
+      } else {
+        // If user doesn't exist, send error
+        throw new ApolloError("Incorrect password", "INCORRECT_PASSWORD");
+      }
+    },
+
     createMessage: async (parent, { messageInput: { title, content } }) => {
       const newMessage = new Message({ title, content });
       const res = await newMessage.save();
@@ -72,10 +152,10 @@ const resolvers = {
       return res;
     },
 
-    createUser: async (_, args) => {
+    createUser: async (_, args, info, context) => {
       const userInput = args.input;
       console.log(args);
-      const newUser = new User(userInput);
+      const newUser = new UserModel(userInput);
       try {
         await newUser.save();
         return newUser; // Ensure you return the created user object
@@ -84,10 +164,11 @@ const resolvers = {
         throw new Error("Failed to create user");
       }
     },
+
     updateUsername: async (parent, args) => {
       const { id, newUsername } = args.input;
       try {
-        const user = await User.findByIdAndUpdate(
+        const user = await UserModel.findByIdAndUpdate(
           id,
           { username: newUsername },
           { new: true }
@@ -98,10 +179,11 @@ const resolvers = {
         return null;
       }
     },
+
     deleteUser: async (parent, args) => {
       const id = args.id;
       try {
-        await User.findByIdAndDelete(id);
+        await UserModel.findByIdAndDelete(id);
         return "User deleted successfully";
       } catch (error) {
         console.error(error);

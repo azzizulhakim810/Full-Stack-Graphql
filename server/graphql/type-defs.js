@@ -9,12 +9,21 @@ const typeDefs = gql`
     nationality: Nationality!
   }
 
+  type Customer {
+    id: ID!
+    cUsername: String!
+    email: String!
+    password: String!
+    token: String!
+  }
+
   type Query {
     users: UserResult
     user(id: ID!): User!
     userByName(name: String!): User!
     messages: [Message!]!
-    message(ID: ID!): Message
+    message(id: ID!): Message!
+    customer(id: ID!): Customer!
   }
 
   input CreateUserInput {
@@ -32,6 +41,12 @@ const typeDefs = gql`
   input MessageInput {
     title: String!
     content: String!
+  }
+
+  input RegisterInput {
+    cUsername: String!
+    email: String!
+    password: String!
   }
 
   input LoginInput {
@@ -55,7 +70,9 @@ const typeDefs = gql`
     createMessage(messageInput: MessageInput): Message!
     updateUsername(input: UpdateUsernameInput!): User
     deleteUser(id: ID!): String!
-    # login(input: LoginInput): UserWithToken
+
+    registerUser(registerInput: RegisterInput): Customer!
+    loginUser(loginInput: LoginInput): Customer!
   }
 
   type Subscription {
