@@ -60,6 +60,7 @@ const resolvers = {
       }
 
     },
+    
     async loginUser(_, { loginInput: {email, password } }) {
 
         // See if a user exists with the email

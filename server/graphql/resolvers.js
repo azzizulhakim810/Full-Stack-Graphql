@@ -14,6 +14,7 @@ const resolvers = {
       subscribe: () => pubSub.asyncIterator("MESSAGE_CREATED"),
     },
   },
+
   Query: {
     customer: async (_, { ID }) => {
       try {
@@ -35,6 +36,7 @@ const resolvers = {
         return { message: "Error fetching users" };
       }
     },
+
     user: async (parent, args) => {
       try {
         const user = await UserModel.findById(args.id);
@@ -65,6 +67,7 @@ const resolvers = {
         return { message: "Error fetching message" };
       }
     },
+
     message: async (parent, { id }) => {
       try {
         const message = await Message.findById(id);

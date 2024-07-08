@@ -34,7 +34,7 @@ mongoose
   // Configure ApolloServer
   const server = new ApolloServer({
     schema,
-    context: ({ req }) => ({ req, pubSub }),
+    context: ({ req, res }) => ({ req, pubSub }),
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
