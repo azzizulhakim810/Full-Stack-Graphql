@@ -11,7 +11,7 @@ const typeDefs = gql`
 
   type Customer {
     id: ID!
-    cUsername: String!
+    username: String!
     email: String!
     password: String!
     token: String!
@@ -23,6 +23,7 @@ const typeDefs = gql`
     userByName(name: String!): User!
     messages: [Message!]!
     message(id: ID!): Message!
+    customers: [Customer!]
     customer(id: ID!): Customer!
   }
 
@@ -44,9 +45,10 @@ const typeDefs = gql`
   }
 
   input RegisterInput {
-    cUsername: String!
+    username: String!
     email: String!
     password: String!
+    confirmPassword: String!
   }
 
   input LoginInput {
@@ -68,11 +70,11 @@ const typeDefs = gql`
   type Mutation {
     createUser(input: CreateUserInput!): User!
     createMessage(messageInput: MessageInput): Message!
-    updateUsername(input: UpdateUsernameInput!): User
+    updateUsername(input: UpdateUsernameInput!): User!
     deleteUser(id: ID!): String!
 
-    registerUser(registerInput: RegisterInput): Customer!
-    loginUser(loginInput: LoginInput): Customer!
+    registerCustomer(registerInput: RegisterInput): Customer!
+    loginCustomer(loginInput: LoginInput): Customer!
   }
 
   type Subscription {

@@ -43,7 +43,7 @@
 
 .data {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 290px);
   gap: 20px;
 }
 
@@ -51,6 +51,7 @@
   border: 2px solid white;
   padding: 20px;
   text-align: left;
+  overflow-wrap: break-word;
 }
 
 .input-fields {

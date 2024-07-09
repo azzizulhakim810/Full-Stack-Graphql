@@ -20,6 +20,18 @@ const QUERY_ALL_USERS = gql`
   }
 `;
 
+const QUERY_ALL_CUSTOMERS = gql`
+  query getAllCustomers {
+    customers {
+      id
+      username
+      email
+      password
+      token
+    }
+  }
+`;
+
 const QUERY_ALL_MESSAGES = gql`
   query GetAllMessages {
     messages {
@@ -71,6 +83,11 @@ function DisplayData() {
   const { data, loading, refetch, error } = useQuery(QUERY_ALL_USERS);
 
   // console.log(data.users.users);
+
+  const { data: customersData, error: customersError } =
+    useQuery(QUERY_ALL_CUSTOMERS);
+
+  // console.log(customersData);
 
   const { data: messageData, error: messageError } =
     useQuery(QUERY_ALL_MESSAGES);
@@ -152,21 +169,21 @@ function DisplayData() {
         </button>
       </div>
 
-      {/* Users */}
       <div className="data">
+        {/* Users */}
         <div className="child">
-          <h2>Users</h2>
+          <h2 className="font-semibold text-xl text-light">Users</h2>
           {data &&
             data.users.users.map((user) => (
               <div key={user.id}>
-                <hr />
+                <hr className="mt-2 mb-5" />
                 <p>Name: {user.name.toUpperCase()}</p>
                 <p>Age: {user.age}</p>
                 <p>Nationality: {user.nationality}</p>
                 <p>Username: {user.username}</p>
                 <div className="user-options">
                   <button
-                    className="btn-custom"
+                    className="btn-custom mt-2"
                     onClick={() => {
                       deleteUser({
                         variables: {
@@ -188,13 +205,27 @@ function DisplayData() {
             ))}
         </div>
 
+        {/* Customers */}
+        <div className="child">
+          <h2 className="font-semibold text-xl text-light">Customers</h2>
+          {customersData?.customers?.map((customer) => (
+            <div key={customer.id}>
+              <hr className="my-2" />
+              <p>Username: {customer.username}</p>
+              <p>Email: {customer.email}</p>
+              <p>Password: {customer.password}</p>
+              <p>Token: {customer.token}</p>
+            </div>
+          ))}
+        </div>
+
         {/* Messages */}
         <div className="child">
-          <h2>Messages</h2>
+          <h2 className="font-semibold text-xl text-light">Messages</h2>
           {messageData &&
             messageData.messages.map((message) => (
               <div key={message.id}>
-                <hr />
+                <hr className="my-2" />
                 <h4>Title: {message.title}</h4>
                 <p>Desc: {message.content}</p>
               </div>
@@ -203,8 +234,8 @@ function DisplayData() {
 
         {/* Search Users */}
         <div className="child">
-          <h2>Search Users</h2>
-          <hr />
+          <h2 className="font-semibold text-xl text-light">Search Users</h2>
+          <hr className="my-2" />
           <input
             className="input-field"
             type="text"

@@ -5,7 +5,8 @@ const jwt = require("jsonwebtoken");
 
 const Message = require("../models/Message");
 const UserModel = require("../models/User");
-const CustomerModel = require("../models/Customer");
+const Customer = require("../models/Customer");
+
 const pubSub = new PubSub();
 
 const resolvers = {
@@ -18,11 +19,20 @@ const resolvers = {
   Query: {
     customer: async (_, { ID }) => {
       try {
-        const customer = await CustomerModel.findById(ID);
+        const customer = await Customer.findById(ID);
         return customer;
       } catch (error) {
         console.error(error);
         return null;
+      }
+    },
+
+    customers: async () => {
+      try {
+        const customers = await Customer.find();
+        return customers;
+      } catch (error) {
+        return { message: "Error fetching customers" };
       }
     },
 
@@ -79,9 +89,12 @@ const resolvers = {
     },
   },
   Mutation: {
-    async registerUser(_, { registerInput: { cUsername, email, password } }) {
+    async registerCustomer(
+      _,
+      { registerInput: { username, email, password } }
+    ) {
       // See if an old customer exists with email attempting to register
-      const oldCustomer = await CustomerModel.findOne({ email });
+      const oldCustomer = await Customer.findOne({ email });
 
       // Throw error if that customer exists
       if (oldCustomer) {
@@ -94,8 +107,8 @@ const resolvers = {
       const encryptedPassword = await bcrypt.hash(password, 10);
 
       // Build out Mongoose model (Customer)
-      const newCustomer = new CustomerModel({
-        cUsername: cUsername,
+      const newCustomer = new Customer({
+        username: username,
         email: email,
         password: encryptedPassword,
       });
@@ -119,9 +132,9 @@ const resolvers = {
       };
     },
 
-    async loginUser(_, { loginInput: { email, password } }) {
+    async loginCustomer(_, { loginInput: { email, password } }) {
       // See if a user exists with the email
-      const customer = await CustomerModel.findOne({ email });
+      const customer = await Customer.findOne({ email });
 
       // Check if the entered password equals the encrypted password
       if (customer && (await bcrypt.compare(password, customer.password))) {
