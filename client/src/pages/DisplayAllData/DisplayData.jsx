@@ -114,7 +114,7 @@ function DisplayData() {
   }
 
   return (
-    <div>
+    <div className="my-10">
       {/* Create User */}
       <div className="input-fields">
         <input
@@ -146,6 +146,7 @@ function DisplayData() {
           }}
         />
         <button
+          className="btn bg-white text-black hover:bg-gray-300 "
           onClick={() => {
             createUser({
               variables: {
@@ -213,10 +214,10 @@ function DisplayData() {
               <hr className="my-2" />
               <p>Username: {customer.username}</p>
               <p>Email: {customer.email}</p>
-              <p>Password: {customer.password}</p>
-              <p>Token: {customer.token}</p>
             </div>
           ))}
+
+          {customersError && <h5> There was an error fetching the data</h5>}
         </div>
 
         {/* Messages */}
@@ -227,7 +228,7 @@ function DisplayData() {
               <div key={message.id}>
                 <hr className="my-2" />
                 <h4>Title: {message.title}</h4>
-                <p>Desc: {message.content}</p>
+                <p>Desc: {message.content.slice(0, 20)}...</p>
               </div>
             ))}
         </div>
