@@ -6,12 +6,11 @@ import { AuthContext } from "../../context/authContext";
 import { useForm } from "../../utility/hooks";
 
 const LOGIN_USER = gql`
-  mutation loginCustomer($loginInput: LoginInput) {
+  mutation LoginCustomer($loginInput: LoginInput) {
     loginCustomer(loginInput: $loginInput) {
       id
       username
       email
-      password
       token
     }
   }

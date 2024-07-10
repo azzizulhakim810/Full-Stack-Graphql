@@ -6,6 +6,12 @@ const jwt = require("jsonwebtoken");
 const Message = require("../models/Message");
 const UserModel = require("../models/User");
 const Customer = require("../models/Customer");
+const { Customers } = require("../db/schema/customer/customer");
+const { Users } = require("../db/schema/User/user");
+const { db } = require("../db/db");
+const { eq } = require("drizzle-orm/expressions");
+const { Messages } = require("../db/schema/message/message");
+const { v4: uuidv4 } = require("uuid");
 
 const pubSub = new PubSub();
 
@@ -17,13 +23,32 @@ const resolvers = {
   },
 
   Query: {
-    customer: async (_, { ID }) => {
+    customer: async (_, { email }) => {
       try {
-        const customer = await Customer.findById(ID);
-        return customer;
+        // const customer = await Customer.findById(ID);
+        const customerResult = await db
+          .select()
+          .from(Customers)
+          .where(eq(Customers.email, email));
+
+        const customer = customerResult[0]; // Assuming email is unique and we get at most one record
+
+        // Check if customer exists
+        if (!customer) {
+          throw new ApolloError(
+            "Customer not found with this email",
+            "CUSTOMER_NOT_FOUND"
+          );
+        }
+
+        return {
+          id: customer.id,
+          username: customer.username,
+          email: customer.email,
+        };
       } catch (error) {
-        console.error(error);
-        return null;
+        console.error("Error in finding the customer:", error);
+        throw new ApolloError("Error in finding the customer");
       }
     },
 
@@ -35,7 +60,7 @@ const resolvers = {
       }
 
       try {
-        const customers = await Customer.find();
+        const customers = await db.select().from(Customers);
         return customers;
       } catch (error) {
         return { message: "Error fetching customers" };
@@ -44,11 +69,17 @@ const resolvers = {
 
     users: async (_, { offset, limit }) => {
       try {
-        const users = await UserModel.find().skip(offset).limit(limit);
-        const totalCount = await UserModel.length;
+        const users = await db.select().from(Users).offset(offset).limit(limit);
 
-        return { users, totalCount };
+        /*  const totalCount = await db
+          .select(db.raw("COUNT(*)"))
+          .from(Users)
+          .first()
+          .then((result) => parseInt(result.count, 10)); */
+
+        return { users };
       } catch (error) {
+        console.error("Error fetching users:", error);
         return { message: "Error fetching users" };
       }
     },
@@ -63,11 +94,26 @@ const resolvers = {
       }
     },
 
-    userByName: async (parent, args) => {
+    userByName: async (parent, { name }) => {
       try {
-        const user = await UserModel.findOne({ name: args.name });
-        console.log(user);
-        return user;
+        const users = await db
+          .select()
+          .from(Users)
+          .where(eq(Users?.name, name.toLowerCase()));
+
+        const user = users.length > 0 ? users[0] : null;
+
+        if (!user) {
+          throw new Error(`User with name ${name} not found`);
+        }
+
+        return {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          age: user.age,
+          nationality: user.nationality,
+        };
       } catch (error) {
         console.error(error);
         return null;
@@ -76,7 +122,8 @@ const resolvers = {
 
     messages: async () => {
       try {
-        const messages = await Message.find();
+        // const messages = await Message.find();
+        const messages = await db.select().from(Messages);
         // console.log(messages);
         return messages;
       } catch (error) {
@@ -94,119 +141,202 @@ const resolvers = {
       }
     },
   },
+
   Mutation: {
     async registerCustomer(
       _,
       { registerInput: { username, email, password } }
     ) {
-      // See if an old customer exists with email attempting to register
-      const oldCustomer = await Customer.findOne({ email });
-
-      // Throw error if that customer exists
-      if (oldCustomer) {
-        throw new ApolloError(
-          `A user is already registered this email, ${email}, 'USER_ALREADY_EXISTS'`
+      try {
+        // Log input values
+        console.log(
+          `Registering customer with email: ${email}, username: ${username}`
         );
+
+        // Check if a customer with the same email already exists
+        const oldCustomer = await db
+          .select()
+          .from(Customers)
+          .where(eq(Customers.email, email));
+        console.log(
+          `Old customer check result: ${JSON.stringify(oldCustomer)}`
+        );
+
+        if (oldCustomer.length > 0) {
+          throw new ApolloError(
+            `A user is already registered with this email: ${email}`,
+            "USER_ALREADY_EXISTS"
+          );
+        }
+
+        // Encrypt password
+        const encryptedPassword = await bcrypt.hash(password, 10);
+        console.log(`Encrypted password: ${encryptedPassword}`);
+
+        // Generate a token
+        const token = jwt.sign(
+          { email },
+          process.env.JWT_SECRET || "UNSAFE_STRING",
+          { expiresIn: process.env.TOKEN_EXPIRY_TIME || "2h" }
+        );
+        console.log(`Generated token: ${token}`);
+
+        // Create the new customer record with the token
+        const [newCustomer] = await db
+          .insert(Customers)
+          .values({
+            username,
+            email,
+            password: encryptedPassword,
+            token,
+          })
+          .returning();
+
+        console.log(`New customer created: ${JSON.stringify(newCustomer)}`);
+
+        return {
+          id: newCustomer.id,
+          username: newCustomer.username,
+          email: newCustomer.email,
+          password: newCustomer.password,
+          token,
+        };
+      } catch (error) {
+        console.error("Error in registerCustomer:", error);
+        throw new ApolloError("Error registering customer");
       }
-
-      // Encrypt password
-      const encryptedPassword = await bcrypt.hash(password, 10);
-
-      // Build out Mongoose model (Customer)
-      const newCustomer = new Customer({
-        username: username,
-        email: email,
-        password: encryptedPassword,
-      });
-
-      // Create out JWT (attach to our Customer Model)
-
-      const token = jwt.sign(
-        { customer_id: newCustomer._id, email },
-        "UNSAFE_STRING",
-        { expiresIn: "2h" }
-      );
-
-      newCustomer.token = token;
-      // Save our customer to MongoDB
-
-      const res = await newCustomer.save();
-
-      return {
-        id: res.id,
-        ...res._doc,
-      };
     },
 
     async loginCustomer(_, { loginInput: { email, password } }) {
-      // See if a user exists with the email
-      const customer = await Customer.findOne({ email });
+      try {
+        console.log(`Logging in customer with email: ${email}`);
 
-      // Check if the entered password equals the encrypted password
-      if (customer && (await bcrypt.compare(password, customer.password))) {
-        // Create a NEW Token
+        // Fetch customer from database
+        const customerResult = await db
+          .select()
+          .from(Customers)
+          .where(eq(Customers.email, email));
+
+        const customer = customerResult[0]; // Assuming email is unique and we get at most one record
+
+        // Check if customer exists
+        if (!customer) {
+          throw new ApolloError(
+            "Customer not found with this email",
+            "CUSTOMER_NOT_FOUND"
+          );
+        }
+
+        // Check if password matches
+        const passwordValid = await bcrypt.compare(password, customer.password);
+        if (!passwordValid) {
+          throw new ApolloError("Incorrect password", "INCORRECT_PASSWORD");
+        }
+
+        // Generate JWT token
         const token = jwt.sign(
-          { customer_id: customer._id, email },
-          "UNSAFE_STRING",
+          { customer_id: customer.id, email },
+          process.env.JWT_SECRET || "UNSAFE_STRING",
           { expiresIn: "2h" }
         );
 
-        // Attach token a customer model that we found above
-        customer.token = token;
+        // Update customer record with token
+        await db
+          .update(Customers)
+          .set({ token })
+          .where(eq(Customers.id, customer.id));
 
+        // Return customer data with token, omitting password
         return {
           id: customer.id,
-          ...customer._doc,
+          username: customer.username,
+          email: customer.email,
+          token,
         };
-      } else {
-        // If user doesn't exist, send error
-        throw new ApolloError("Incorrect password", "INCORRECT_PASSWORD");
+      } catch (error) {
+        console.error("Error in loginCustomer:", error);
+        throw new ApolloError("Error logging in customer");
       }
     },
 
-    createMessage: async (parent, { messageInput: { title, content } }) => {
-      const newMessage = new Message({ title, content });
-      const res = await newMessage.save();
+    async createMessage(parent, { messageInput: { title, content } }) {
+      try {
+        // Build out Drizzle ORM model (Message)
+        const newMessage = {
+          title: title,
+          content: content,
+        };
 
-      pubSub.publish("MESSAGE_CREATED", {
-        messageCreated: res,
-      });
+        // Save the new message to PostgreSQL
+        const res = await db.insert(Messages).values(newMessage).returning();
 
-      return res;
+        const createdMessage = res[0];
+
+        pubSub.publish("MESSAGE_CREATED", {
+          messageCreated: createdMessage,
+        });
+
+        return createdMessage;
+      } catch (error) {
+        console.error("Error creating message:", error);
+        throw new ApolloError("Failed to create message");
+      }
     },
 
-    createUser: async (_, args, info, context) => {
+    createUser: async (_, args) => {
       const userInput = args.input;
       console.log(args);
-      const newUser = new UserModel(userInput);
+
+      const newUser = {
+        name: userInput.name,
+        username: userInput.username,
+        age: userInput.age,
+        nationality: userInput.nationality,
+      };
+
       try {
-        await newUser.save();
-        return newUser; // Ensure you return the created user object
+        const res = await db.insert(Users).values(newUser).returning();
+        return res[0]; // Ensure you return the created user object
       } catch (error) {
         console.error("Error creating user:", error);
         throw new Error("Failed to create user");
       }
     },
 
-    updateUsername: async (parent, args) => {
-      const { id, newUsername } = args.input;
+    updateUsername: async (parent, { input }) => {
+      const { id, newUsername } = input;
       try {
-        const user = await UserModel.findByIdAndUpdate(
-          id,
-          { username: newUsername },
-          { new: true }
-        );
-        return user;
+        const [updatedUser] = await db
+          .update(Users)
+          .set({ username: newUsername })
+          .where(eq(Users.id, id))
+          .returning(); // This returns the updated user
+
+        if (!updatedUser) {
+          throw new Error("User not found");
+        }
+
+        return {
+          id: updatedUser.id,
+          username: updatedUser.username,
+          name: updatedUser.name,
+          age: updatedUser.age,
+          nationality: updatedUser.nationality,
+        };
       } catch (error) {
         console.error(error);
         return null;
       }
     },
 
-    deleteUser: async (parent, args) => {
-      const id = args.id;
+    deleteUser: async (parent, { id }) => {
       try {
-        await UserModel.findByIdAndDelete(id);
+        const deleteResult = await db.delete(Users).where(eq(Users.id, id));
+
+        if (deleteResult.rowCount === 0) {
+          return "User not found";
+        }
+
         return "User deleted successfully";
       } catch (error) {
         console.error(error);

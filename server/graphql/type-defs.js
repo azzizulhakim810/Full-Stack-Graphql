@@ -24,7 +24,7 @@ const typeDefs = gql`
     messages: [Message!]!
     message(id: ID!): Message!
     customers: [Customer!]
-    customer(id: ID!): Customer!
+    customer(email: String!): Customer!
   }
 
   input CreateUserInput {
@@ -55,17 +55,6 @@ const typeDefs = gql`
     email: String!
     password: String!
   }
-
-  # type UserWithToken {
-  #  _id: String
-  #   email: String
-  #   fname: String
-  #   lname: String
-  #   following: [String]
-  #  createdAt: DateTime
-  #  updatedAt: DateTime
-  #  userJwtToken: JwtToken
-  # }
 
   type Mutation {
     createUser(input: CreateUserInput!): User!

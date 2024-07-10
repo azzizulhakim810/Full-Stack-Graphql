@@ -1,5 +1,5 @@
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 const { createServer } = require("http");
 const { execute, subscribe } = require("graphql");

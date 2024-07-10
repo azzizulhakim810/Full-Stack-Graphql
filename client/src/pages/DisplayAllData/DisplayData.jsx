@@ -173,7 +173,7 @@ function DisplayData() {
       <div className="data">
         {/* Users */}
         <div className="child">
-          <h2 className="font-semibold text-xl text-light">Users</h2>
+          <h2 className="font-semibold text-xl text-light">All Users</h2>
           {data &&
             data.users.users.map((user) => (
               <div key={user.id}>
