@@ -1,4 +1,4 @@
-import CustomerModel from "../models/Customer.js";
+/* import CustomerModel from "../models/Customer.js";
 
 const customerHelper = {
   isEmailAlreadyExist: async (email) => {
@@ -8,3 +8,4 @@ const customerHelper = {
 };
 
 export default customerHelper;
+ */

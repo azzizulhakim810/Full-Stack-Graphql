@@ -1,4 +1,4 @@
-const { ApolloError } = require("apollo-server-express");
+/* const { ApolloError } = require("apollo-server-express");
 const CustomerModel = require("../models/Customer");
 
 const bcrypt = require('bcrypt');
@@ -103,3 +103,4 @@ const resolvers = {
 };
 
 module.exports = { resolvers };
+ */

@@ -1,5 +1,5 @@
 const { PubSub } = require("graphql-subscriptions");
-const { ApolloError } = require("apollo-server-express");
+const { ApolloError, AuthenticationError } = require("apollo-server-express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -27,7 +27,13 @@ const resolvers = {
       }
     },
 
-    customers: async () => {
+    customers: async (_, __, context) => {
+      if (!context.user) {
+        throw new AuthenticationError(
+          "You must be logged in to view customers"
+        );
+      }
+
       try {
         const customers = await Customer.find();
         return customers;
