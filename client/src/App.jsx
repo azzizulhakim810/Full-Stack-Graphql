@@ -7,17 +7,7 @@ import Register from "./pages/Register";
 import Navbar from "./components/Navbar";
 
 function App() {
-  return (
-    <div className="App">
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Homepage />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-      {/* <DisplayData /> */}
-    </div>
-  );
+  return <div className="App"></div>;
 }
 
 export default App;
