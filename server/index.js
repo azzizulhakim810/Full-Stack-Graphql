@@ -1,3 +1,6 @@
+const fetch = require("node-fetch");
+global.fetch = fetch;
+
 const { execute, subscribe } = require("graphql");
 const { SubscriptionServer } = require("subscriptions-transport-ws");
 const { makeExecutableSchema } = require("@graphql-tools/schema");
