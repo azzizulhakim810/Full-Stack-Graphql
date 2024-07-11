@@ -1,8 +1,3 @@
-let fetch;
-(async () => {
-  const { default: fetchDefault } = await import("node-fetch");
-  fetch = fetchDefault;
-})();
 const { execute, subscribe } = require("graphql");
 const { SubscriptionServer } = require("subscriptions-transport-ws");
 const { makeExecutableSchema } = require("@graphql-tools/schema");
