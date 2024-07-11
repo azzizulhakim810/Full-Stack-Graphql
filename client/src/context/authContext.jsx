@@ -1,4 +1,6 @@
 import { useReducer, createContext } from "react";
+
+// ** import third party
 import { jwtDecode } from "jwt-decode";
 
 const initialState = {
@@ -17,7 +19,7 @@ if (localStorage.getItem("token")) {
 
 const AuthContext = createContext({
   customer: null,
-  login: (customerData) => {},
+  login: () => {},
   logout: () => {},
 });
 

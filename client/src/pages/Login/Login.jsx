@@ -1,9 +1,15 @@
-import { useMutation } from "@apollo/client";
-import { gql } from "graphql-tag";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/authContext";
+
+// ** import third party
+import { useMutation } from "@apollo/client";
+import { gql } from "graphql-tag";
+
+// ** import hooks
 import { useForm } from "../../utility/hooks";
+
+// ** import apis
+import { AuthContext } from "../../context/authContext";
 
 const LOGIN_USER = gql`
   mutation LoginCustomer($loginInput: LoginInput) {
@@ -16,7 +22,7 @@ const LOGIN_USER = gql`
   }
 `;
 
-const Login = (props) => {
+const Login = () => {
   const context = useContext(AuthContext);
   let navigate = useNavigate();
   const [errors, setErrors] = useState([]);
@@ -30,7 +36,7 @@ const Login = (props) => {
     password: " ",
   });
 
-  const [loginCustomer, { loading }] = useMutation(LOGIN_USER, {
+  const [loginCustomer] = useMutation(LOGIN_USER, {
     update(proxy, { data: { loginCustomer: CustomerData } }) {
       context.login(CustomerData);
       navigate("/");

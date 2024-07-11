@@ -1,37 +1,36 @@
-const dotenv = require("dotenv");
-dotenv.config({ path: ".env.local" });
-
-const { createServer } = require("http");
 const { execute, subscribe } = require("graphql");
 const { SubscriptionServer } = require("subscriptions-transport-ws");
 const { makeExecutableSchema } = require("@graphql-tools/schema");
-const { PubSub } = require("graphql-subscriptions");
+const { createServer } = require("http");
 const express = require("express");
+
+// ** import third party
+const dotenv = require("dotenv");
+const { PubSub } = require("graphql-subscriptions");
 const { ApolloServer } = require("apollo-server-express");
-const mongoose = require("mongoose");
-const { resolvers } = require("./graphql/resolvers");
-const { typeDefs } = require("./graphql/type-defs");
+
 const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
 const { GraphQLError } = require("graphql");
+
+// ** import config
+dotenv.config({ path: ".env.local" });
+
+// ** import utils
 const { getUser } = require("./utils/getUser");
+
+const resolvers = require("./graphql/resolvers");
+const typeDefs = require("./graphql/type-defs");
 
 const PORT = process.env.PORT || 4000;
 
-mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-  })
-  .then(() => {
-    console.log("DB connected!!");
-  })
-  .catch((err) => console.log(err));
-
+// Create express app & wrap it by httpServer
 (async () => {
   const app = express();
   const httpServer = createServer(app);
   const pubSub = new PubSub();
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
+  // Create Instance of Apollo Server
   const server = new ApolloServer({
     schema,
     context: async ({ req }) => {
@@ -42,6 +41,7 @@ mongoose
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
+  // Create Subscription
   SubscriptionServer.create(
     {
       schema,

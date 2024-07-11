@@ -1,5 +1,9 @@
 import { Outlet } from "react-router-dom";
+
+// ** import components
 import Navbar from "../components/Navbar";
+
+// ** import css
 import "../App.css";
 
 const Root = () => {

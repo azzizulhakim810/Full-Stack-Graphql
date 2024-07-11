@@ -1,5 +1,7 @@
 import { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
+// ** import apis
 import { AuthContext } from "../context/authContext";
 
 const Navbar = () => {

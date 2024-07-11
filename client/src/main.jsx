@@ -1,11 +1,19 @@
-import { ApolloProvider } from "@apollo/client";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
-import client from "./apolloClient.js";
-import "./index.css";
-import { AuthProvider } from "./context/authContext.jsx";
+
+// ** import third party
+import { ApolloProvider } from "@apollo/client";
+
+// ** import components
 import { router } from "./routes/router.jsx";
+import client from "./apolloClient.js";
+
+// ** import apis
+import { AuthProvider } from "./context/authContext.jsx";
+
+// ** import css
+import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <AuthProvider>

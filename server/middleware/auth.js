@@ -1,4 +1,7 @@
-const { AuthenticationError } = require("apollo-server");
+// Import required modules from Apollo Server
+import { AuthenticationError } from "apollo-server-express";
+
+// Import JWT
 const jwt = require("jsonwebtoken");
 
 module.exports = (context) => {
