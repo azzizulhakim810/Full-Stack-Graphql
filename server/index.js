@@ -39,8 +39,6 @@ const PORT = process.env.PORT || 4000;
       return { req, pubSub, user };
     },
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-    playground: true,
-    introspection: true,
   });
 
   // Create Subscription
@@ -59,7 +57,7 @@ const PORT = process.env.PORT || 4000;
   );
 
   await server.start();
-  server.applyMiddleware({ path: "/graphql", app });
+  server.applyMiddleware({ app });
 
   await new Promise((resolve) => httpServer.listen({ port: PORT }, resolve));
   console.log(`Server ready at http://localhost:${PORT}${server.graphqlPath}`);
