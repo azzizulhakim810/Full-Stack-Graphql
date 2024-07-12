@@ -38,6 +38,8 @@ const PORT = process.env.PORT || 4000;
       const user = await getUser(token);
       return { req, pubSub, user };
     },
+    playground: true,
+    introspection: true,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
