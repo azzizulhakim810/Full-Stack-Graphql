@@ -30,7 +30,7 @@ const PORT = process.env.PORT || 4000;
   const pubSub = new PubSub();
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-  // Create Instance of Apollo Server
+  // Initialize Instance of Apollo Server
   const server = new ApolloServer({
     schema,
     context: async ({ req }) => {
