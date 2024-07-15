@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@escape.tech/graphql-armor": "^3.0.1",
     "@graphql-tools/schema": "^10.0.4",
     "@neondatabase/serverless": "^0.9.4",
     "apollo-server": "^3.13.0",

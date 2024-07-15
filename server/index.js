@@ -8,6 +8,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const { PubSub } = require("graphql-subscriptions");
 const { ApolloServer } = require("apollo-server-express");
+const { ApolloArmor } = require("@escape.tech/graphql-armor");
 
 const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
 const { GraphQLError } = require("graphql");
@@ -22,6 +23,12 @@ const resolvers = require("./graphql/resolvers");
 const typeDefs = require("./graphql/type-defs");
 
 const PORT = process.env.PORT || 4000;
+
+// Instantiate GraphQL Armor
+const armor = new ApolloArmor({
+  // Completely disable aliases for this lesson
+  maxAliases: { n: 0 },
+});
 
 // Create express app & wrap it by httpServer
 (async () => {
@@ -40,6 +47,8 @@ const PORT = process.env.PORT || 4000;
     },
     playground: true,
     introspection: true,
+    // Add the protections to the server
+    ...armor.protect(),
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
